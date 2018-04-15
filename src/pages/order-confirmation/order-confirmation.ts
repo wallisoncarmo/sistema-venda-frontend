@@ -1,3 +1,4 @@
+import { PedidoService } from './../../services/domain/pedido.service';
 import { ClienteService } from './../../services/domain/cliente.service';
 import { EnderecoDTO } from './../../models/endereco.dto';
 import { ClienteDTO } from './../../models/cliente.dto';
@@ -24,8 +25,8 @@ export class OrderConfirmationPage {
     public navCtrl: NavController,
     public navParams: NavParams,
     public cartService: CartService,
-    public clienteService:ClienteService
-  ) {
+    public clienteService: ClienteService,
+    public pedidoService: PedidoService) {
 
     this.pedido = this.navParams.get('pedido');
   }
@@ -33,21 +34,41 @@ export class OrderConfirmationPage {
   ionViewDidLoad() {
     this.cartItems = this.cartService.getCart().items;
 
-    this.clienteService.findById(this.pedido.cliente.id).subscribe(res=>{
+    this.clienteService.findById(this.pedido.cliente.id).subscribe(res => {
       this.cliente = res as ClienteDTO;
-      this.endereco = this.findEndereco(this.pedido.enderecoDeEntrega.id,res['enderecos']);
-    },error=>{
+      this.endereco = this.findEndereco(this.pedido.enderecoDeEntrega.id, res['enderecos']);
+    }, error => {
       this.navCtrl.setRoot('HomePage');
     })
   }
 
-  private findEndereco(id:string,list : EnderecoDTO[]):EnderecoDTO{
-    let position = list.findIndex(x=> x.id == id);
+  private findEndereco(id: string, list: EnderecoDTO[]): EnderecoDTO {
+    let position = list.findIndex(x => x.id == id);
     return list[position];
   }
 
-  total(){
+  total() {
     return this.cartService.total();
+  }
+
+  back(){
+    this.navCtrl.setRoot("CartPage");
+  }
+
+  checkout() {
+    this.pedidoService.insert(this.pedido).subscribe(res=>{
+
+      this.cartService.createOrClearCart();
+      console.log(res.headers.get('location'));
+
+    },error=>{
+
+      if(error.status == 403){
+        this.navCtrl.setRoot("HomePage");
+      }
+
+    });
+
   }
 
 }
