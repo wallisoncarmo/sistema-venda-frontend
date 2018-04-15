@@ -1,3 +1,4 @@
+import { FieldMessage } from './../models/fieldmessage';
 import { Injectable } from '@angular/core';
 import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { Observable } from 'rxjs/Rx';
@@ -6,74 +7,101 @@ import { AlertController } from 'ionic-angular';
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
 
-    
-    constructor (
-        public storage:StorageService,
+
+    constructor(
+        public storage: StorageService,
         public alertController: AlertController
-    ){}
+    ) { }
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-      
+
         return next.handle(req)
-        .catch((error, caught) => {
+            .catch((error, caught) => {
 
-            let errorObj = error;
-            if (errorObj.error) {
-                errorObj = errorObj.error;
-            }
-            if (!errorObj.status) {
-                errorObj = JSON.parse(errorObj);
-            }
+                let errorObj = error;
+                if (errorObj.error) {
+                    errorObj = errorObj.error;
+                }
+                if (!errorObj.status) {
+                    errorObj = JSON.parse(errorObj);
+                }
 
-            console.log("Erro detectado pelo interceptor:");
-            console.log(errorObj);
+                console.log("Erro detectado pelo interceptor:");
+                console.log(errorObj);
 
-            switch(errorObj.status){
-                case 401:
-                this.handle401();
-                break;
+                switch (errorObj.status) {
+                    case 401:
+                        this.handle401();
+                        break;
 
-                case 403:
-                this.handle403();
-                break;
+                    case 403:
+                        this.handle403();
+                        break;
 
-                default:
-                this.handleDefaultError(errorObj);
-            }
+                    case 422:
+                        this.handle422(errorObj);
+                        break;
 
-            return Observable.throw(errorObj);
-        }) as any;
+                    default:
+                        this.handleDefaultError(errorObj);
+                }
+
+                return Observable.throw(errorObj);
+            }) as any;
     }
 
-    handle401(){
+    handle401() {
         let alert = this.alertController.create({
-            title:'Falha de Autenticação',
-            message:'E-mail ou senha Incorretos',
-            enableBackdropDismiss:false,
-            buttons:[
-                {text:'Ok'}
+            title: 'Falha de Autenticação',
+            message: 'E-mail ou senha Incorretos',
+            enableBackdropDismiss: false,
+            buttons: [
+                { text: 'Ok' }
             ]
         });
 
         alert.present();
     }
 
-    handle403(){
+    handle403() {
         this.storage.setLocalUser(null);
     }
 
     handleDefaultError(error) {
         let alert = this.alertController.create({
-            title:'Erro'+error.status+': '+error.error,
-            message:error.message,
-            enableBackdropDismiss:false,
-            buttons:[
-                {text:'Ok'}
+            title: 'Erro' + error.status + ': ' + error.error,
+            message: error.message,
+            enableBackdropDismiss: false,
+            buttons: [
+                { text: 'Ok' }
             ]
         });
 
         alert.present();
     }
+
+    handle422(error) {
+        let alert = this.alertController.create({
+            title: 'Erro de validação',
+            message: this.listErros(error.errors),
+            enableBackdropDismiss: false,
+            buttons: [
+                { text: 'Ok' }
+            ]
+        });
+
+        alert.present();
+    }
+
+    private listErros(list: FieldMessage[]):string {
+        let s : string='';
+        for(var i=0;i<list.length;i++){
+            s+='<p><strong>'+list[i].fieldName+'</strong> '+list[i].message+'</p>';
+        }
+        return s;
+    }
+
+
 }
 
 export const ErrorInterceptorProvider = {
