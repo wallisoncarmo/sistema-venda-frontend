@@ -1,3 +1,4 @@
+import { ProdutoService } from './../services/domain/produto.service';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 import { ErrorHandler, NgModule } from '@angular/core';
@@ -36,7 +37,8 @@ import { ClienteService } from '../services/domain/cliente.service';
     ErrorInterceptorProvider,
     AuthService,
     StorageService,
-    ClienteService
+    ClienteService,
+    ProdutoService
   ]
 })
 export class AppModule {}
