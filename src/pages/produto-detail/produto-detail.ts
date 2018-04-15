@@ -48,6 +48,7 @@ export class ProdutoDetailPage {
   }
 
   addToCart(produto: ProdutoDTO) {
+    produto.imageUrl= `${API_CONFIG.bucketBaseUrl}/prod${produto.id}-small.jpg`;
     this.cartServices.addProduto(produto);
     this.navCtrl.setRoot("CartPage");
   }
